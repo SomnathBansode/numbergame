@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Number Guessing Game with Music</title>
+    <style>
+      .win {
+        color: green;
+      }
+      .lose {
+        color: red;
+      }
+      .score {
+        color: blue;
+        float: left;
+        margin-right: 20px;
+      }
+      .comparison {
+        margin-top: 20px;
+        font-weight: bold;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="startButton">Start Game</button>
+    <div id="scoreBoard" class="score"></div>
+    <div id="result"></div>
+
+    <script>
+      let audio;
+      let attempts;
+      let previousScores = [];
+
+      // Function to play music
+      function playMusic() {
+        audio = new Audio("./play.mp3");
+        audio.loop = true; // Loop the audio
+        audio.play().catch((error) => {
+          console.error("Error playing audio:", error);
+        });
+      }
+
+      // Function to stop music
+      function stopMusic() {
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0; // Reset playback time
+        }
+      }
+
+      function ripit() {
+        let demo = prompt("Enter your number:");
+        let num = Number(demo);
+        let randomnum = Math.floor(Math.random() * 10 + 1);
+        attempts++;
+        let resultDiv = document.getElementById("result");
+
+        let resultRow = document.createElement("tr");
+        let resultData = document.createElement("td");
+        resultData.textContent = attempts;
+        resultRow.appendChild(resultData);
+
+        resultData = document.createElement("td");
+        resultData.textContent = num;
+        resultRow.appendChild(resultData);
+
+        resultData = document.createElement("td");
+        resultData.textContent = randomnum;
+        resultRow.appendChild(resultData);
+
+        resultData = document.createElement("td");
+        if (num === randomnum) {
+          resultData.textContent = "Win";
+          resultData.classList.add("win");
+          stopMusic();
+          previousScores.push(attempts);
+          displayScores();
+          displayComparisonMessage();
+          attempts = 0; // Reset attempts for next game
+        } else {
+          resultData.textContent = "Lose";
+          resultData.classList.add("lose");
+          setTimeout(ripit, 100); // Short delay to avoid call stack overflow
+        }
+        resultRow.appendChild(resultData);
+
+        resultDiv.querySelector("tbody").appendChild(resultRow);
+      }
+
+      function displayScores() {
+        let scoreBoard = document.getElementById("scoreBoard");
+        scoreBoard.innerHTML = "";
+        scoreBoard.textContent = "Game Scores: ";
+        previousScores.forEach((score, index) => {
+          let scoreParagraph = document.createElement("p");
+          scoreParagraph.textContent = `Game ${index + 1}: ${score}`;
+          scoreBoard.appendChild(scoreParagraph);
+        });
+      }
+
+      function displayComparisonMessage() {
+        if (previousScores.length > 1) {
+          let comparison = document.createElement("p");
+          comparison.classList.add("comparison");
+          let lastScore = previousScores[previousScores.length - 1];
+          let previousScore = previousScores[previousScores.length - 2];
+          if (lastScore < previousScore) {
+            comparison.textContent = `You win! Your score is ${lastScore}, previous game score was ${previousScore}.`;
+          } else {
+            comparison.textContent = `You lose! Your score is ${lastScore}, previous game score was ${previousScore}.`;
+          }
+          document.getElementById("scoreBoard").appendChild(comparison);
+        }
+      }
+
+      // Start the game and music after user interaction
+      document.getElementById("startButton").addEventListener("click", () => {
+        if (audio) {
+          stopMusic(); // Stop any previous music
+        }
+        playMusic();
+        attempts = 0; // Reset attempts for new game
+
+        // Create a new table for each game
+        let resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = ""; // Clear previous table
+        let table = document.createElement("table");
+        let thead = document.createElement("thead");
+        let tbody = document.createElement("tbody");
+
+        let headerRow = document.createElement("tr");
+        ["Attempt", "Your Number", "Random Number", "Result"].forEach(
+          (text) => {
+            let th = document.createElement("th");
+            th.textContent = text;
+            headerRow.appendChild(th);
+          }
+        );
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        resultDiv.appendChild(table);
+
+        displayScores(); // Display all previous game records
+        ripit();
+      });
+    </script>
+  </body>
+</html>
